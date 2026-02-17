@@ -1,0 +1,124 @@
+/* Swatch container */
+.wvci-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+/* Base swatch */
+.wvci-swatch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    transition: border-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.wvci-swatch:hover {
+    border-color: #333;
+}
+
+/* Selected state */
+.wvci-swatch.wvci-selected {
+    border-color: #000;
+    box-shadow: 0 0 0 1px #000;
+}
+
+/* Disabled / out-of-stock state */
+.wvci-swatch.wvci-disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+    position: relative;
+}
+
+.wvci-swatch.wvci-disabled::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -2px;
+    right: -2px;
+    height: 1px;
+    background: #e00;
+    transform: rotate(-45deg);
+}
+
+/* Color swatch */
+.wvci-swatch--color {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+}
+
+.wvci-swatch--color.wvci-selected {
+    border-color: #000;
+    box-shadow: 0 0 0 2px #000;
+}
+
+/* Image swatch */
+.wvci-swatch--image {
+    width: 44px;
+    height: 44px;
+    padding: 2px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.wvci-swatch--image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 2px;
+    display: block;
+}
+
+.wvci-swatch--image.wvci-selected {
+    border-color: #000;
+}
+
+/* Label fallback swatch */
+.wvci-swatch--label {
+    padding: 6px 14px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1;
+    background: #fff;
+    color: #333;
+}
+
+.wvci-swatch--label.wvci-selected {
+    border-color: #000;
+    background: #000;
+    color: #fff;
+}
+
+/* Tooltip */
+.wvci-swatch[title] {
+    position: relative;
+}
+
+/* Ensure the hidden WooCommerce select stays truly hidden */
+.wvci-select-wrapper {
+    position: absolute !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    border: 0 !important;
+}
+
+/* RTL support */
+[dir="rtl"] .wvci-swatches,
+.rtl .wvci-swatches {
+    direction: rtl;
+}
