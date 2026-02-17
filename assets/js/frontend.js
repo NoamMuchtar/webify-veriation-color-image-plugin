@@ -169,10 +169,64 @@
         });
     }
 
+    /**
+     * Archive / shop page: handle swatch clicks to swap product thumbnail image.
+     */
+    function initArchiveSwatches() {
+        $(document).on('click', '.wvci-archive-swatch', function (e) {
+            e.preventDefault();
+            e.stopPropagation(); // prevent navigating to product page
+
+            var $swatch = $(this);
+            var $container = $swatch.closest('.wvci-archive-swatches');
+            var variationImg = $swatch.data('variation-img');
+
+            // Find the product card wrapper (li.product)
+            var $productCard = $container.closest('li.product, .product');
+            if (!$productCard.length) {
+                return;
+            }
+
+            // Store original image on first interaction
+            var $img = $productCard.find('.attachment-woocommerce_thumbnail, .woocommerce-placeholder, .wp-post-image').first();
+            if (!$img.length) {
+                return;
+            }
+
+            if (!$img.data('wvci-original-src')) {
+                $img.data('wvci-original-src', $img.attr('src'));
+                $img.data('wvci-original-srcset', $img.attr('srcset') || '');
+            }
+
+            // Toggle: if already selected, deselect and restore original image
+            if ($swatch.hasClass('wvci-selected')) {
+                $swatch.removeClass('wvci-selected');
+                $img.attr('src', $img.data('wvci-original-src'));
+                if ($img.data('wvci-original-srcset')) {
+                    $img.attr('srcset', $img.data('wvci-original-srcset'));
+                } else {
+                    $img.removeAttr('srcset');
+                }
+                return;
+            }
+
+            // Select this swatch
+            $container.find('.wvci-archive-swatch').removeClass('wvci-selected');
+            $swatch.addClass('wvci-selected');
+
+            // Swap the product image if variation has an image
+            if (variationImg) {
+                $img.attr('src', variationImg);
+                $img.removeAttr('srcset'); // avoid conflicting srcset
+            }
+        });
+    }
+
     $(document).ready(function () {
         initSwatchClicks();
         initVariationImageSwap();
         syncSwatchesWithSelects();
         initAvailabilityCheck();
+        initArchiveSwatches();
     });
 })(jQuery);

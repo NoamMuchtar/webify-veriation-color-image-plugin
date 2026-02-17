@@ -117,8 +117,40 @@
     border: 0 !important;
 }
 
+/* ==========================================
+   Archive / Shop page swatches
+   ========================================== */
+.wvci-archive-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+
+/* Smaller swatches for archive cards */
+.wvci-archive-swatches .wvci-swatch--color {
+    width: 24px;
+    height: 24px;
+}
+
+.wvci-archive-swatches .wvci-swatch--image {
+    width: 30px;
+    height: 30px;
+    padding: 1px;
+}
+
+/* Smooth image transition on archive product cards */
+li.product img.attachment-woocommerce_thumbnail,
+li.product img.wp-post-image {
+    transition: opacity 0.2s ease;
+}
+
 /* RTL support */
 [dir="rtl"] .wvci-swatches,
-.rtl .wvci-swatches {
+.rtl .wvci-swatches,
+[dir="rtl"] .wvci-archive-swatches,
+.rtl .wvci-archive-swatches {
     direction: rtl;
 }
