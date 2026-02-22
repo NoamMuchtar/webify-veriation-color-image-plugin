@@ -29,7 +29,7 @@
     box-shadow: 0 0 0 1px #000;
 }
 
-/* Disabled / out-of-stock state */
+/* Disabled state – combination does not exist, completely blocked */
 .wvci-swatch.wvci-disabled {
     opacity: 0.35;
     cursor: not-allowed;
@@ -38,6 +38,23 @@
 }
 
 .wvci-swatch.wvci-disabled::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -2px;
+    right: -2px;
+    height: 1px;
+    background: #e00;
+    transform: rotate(-45deg);
+}
+
+/* Out-of-stock state – clickable but visually marked */
+.wvci-swatch.wvci-out-of-stock {
+    opacity: 0.4;
+    position: relative;
+}
+
+.wvci-swatch.wvci-out-of-stock::after {
     content: '';
     position: absolute;
     top: 50%;
@@ -139,24 +156,6 @@
     width: 30px;
     height: 30px;
     padding: 1px;
-}
-
-/* Out-of-stock swatches on archive pages */
-.wvci-archive-swatch.wvci-out-of-stock {
-    opacity: 0.35;
-    cursor: default;
-    position: relative;
-}
-
-.wvci-archive-swatch.wvci-out-of-stock::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: -2px;
-    right: -2px;
-    height: 1px;
-    background: #e00;
-    transform: rotate(-45deg);
 }
 
 /* Smooth image transition on archive product cards */

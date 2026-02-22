@@ -138,7 +138,8 @@
     }
 
     /**
-     * Mark out-of-stock / unavailable swatches.
+     * Mark unavailable combination swatches as disabled,
+     * and out-of-stock swatches with a visual indicator (still clickable).
      */
     function initAvailabilityCheck() {
         var $form = $('form.variations_form');
@@ -147,25 +148,99 @@
             return;
         }
 
+        var allVariations = $form.data('product_variations');
+
         $form.on('update_variation_values', function () {
-            // After WooCommerce updates which options are available/greyed-out,
-            // mirror that state onto our swatches.
             $form.find('.wvci-swatches').each(function () {
                 var $swatchContainer = $(this);
                 var $select = $swatchContainer.siblings('.wvci-select-wrapper').find('select');
+                var attrName = $select.data('attribute_name') || $select.attr('name');
+
+                // Get current selections for other attributes
+                var currentSelections = {};
+                $form.find('.variations select').each(function () {
+                    var name = $(this).data('attribute_name') || $(this).attr('name');
+                    if (name !== attrName) {
+                        currentSelections[name] = $(this).val();
+                    }
+                });
 
                 $swatchContainer.find('.wvci-swatch').each(function () {
                     var $swatch = $(this);
-                    var val = $swatch.data('value');
+                    var val = String($swatch.data('value'));
                     var $option = $select.find('option[value="' + val + '"]');
 
+                    // Reset classes
+                    $swatch.removeClass('wvci-disabled wvci-out-of-stock');
+
+                    // Disabled: combination doesn't exist
                     if (!$option.length || $option.is(':disabled')) {
                         $swatch.addClass('wvci-disabled');
-                    } else {
-                        $swatch.removeClass('wvci-disabled');
+                        return;
+                    }
+
+                    // Out-of-stock check: enabled but all matching variations are out of stock
+                    if (allVariations && allVariations.length) {
+                        var allOutOfStock = true;
+                        var hasMatch = false;
+
+                        for (var i = 0; i < allVariations.length; i++) {
+                            var variation = allVariations[i];
+                            var attrs = variation.attributes;
+
+                            // Must match this attribute value (or be "any")
+                            if (attrs[attrName] !== '' && attrs[attrName] !== val) {
+                                continue;
+                            }
+
+                            // Must match other currently selected attributes
+                            var matchesOthers = true;
+                            for (var key in currentSelections) {
+                                if (!currentSelections[key]) continue;
+                                if (attrs[key] !== '' && attrs[key] !== currentSelections[key]) {
+                                    matchesOthers = false;
+                                    break;
+                                }
+                            }
+
+                            if (!matchesOthers) continue;
+
+                            hasMatch = true;
+                            if (variation.is_in_stock) {
+                                allOutOfStock = false;
+                                break;
+                            }
+                        }
+
+                        if (hasMatch && allOutOfStock) {
+                            $swatch.addClass('wvci-out-of-stock');
+                        }
                     }
                 });
             });
+        });
+    }
+
+    /**
+     * Auto-select the first swatch in each attribute group on product page load.
+     */
+    function initAutoSelectFirst() {
+        var $form = $('form.variations_form');
+
+        if (!$form.length) {
+            return;
+        }
+
+        // Wait for WooCommerce to fully initialize the variation form
+        $form.on('wc_variation_form', function () {
+            setTimeout(function () {
+                $form.find('.wvci-swatches').each(function () {
+                    var $firstSwatch = $(this).find('.wvci-swatch:not(.wvci-disabled):first');
+                    if ($firstSwatch.length && !$firstSwatch.hasClass('wvci-selected')) {
+                        $firstSwatch.trigger('click');
+                    }
+                });
+            }, 50);
         });
     }
 
@@ -178,11 +253,6 @@
             e.stopPropagation(); // prevent navigating to product page
 
             var $swatch = $(this);
-
-            // Out-of-stock swatches are not selectable
-            if ($swatch.hasClass('wvci-out-of-stock')) {
-                return;
-            }
             var $container = $swatch.closest('.wvci-archive-swatches');
             var variationImg = $swatch.data('variation-img');
 
@@ -232,6 +302,7 @@
         initVariationImageSwap();
         syncSwatchesWithSelects();
         initAvailabilityCheck();
+        initAutoSelectFirst();
         initArchiveSwatches();
     });
 })(jQuery);
