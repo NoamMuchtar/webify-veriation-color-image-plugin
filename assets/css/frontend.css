@@ -141,6 +141,24 @@
     padding: 1px;
 }
 
+/* Out-of-stock swatches on archive pages */
+.wvci-archive-swatch.wvci-out-of-stock {
+    opacity: 0.35;
+    cursor: default;
+    position: relative;
+}
+
+.wvci-archive-swatch.wvci-out-of-stock::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -2px;
+    right: -2px;
+    height: 1px;
+    background: #e00;
+    transform: rotate(-45deg);
+}
+
 /* Smooth image transition on archive product cards */
 li.product img.attachment-woocommerce_thumbnail,
 li.product img.wp-post-image {

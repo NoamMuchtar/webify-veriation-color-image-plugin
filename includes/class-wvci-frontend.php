@@ -156,8 +156,8 @@ class WVCI_Frontend {
             return;
         }
 
-        // Build a map: attribute_slug => variation image (woocommerce_thumbnail size)
-        $variation_image_map = $this->build_variation_image_map( $product );
+        // Build maps: attribute_slug => variation image + stock status
+        $variation_data_map = $this->build_variation_data_map( $product );
 
         foreach ( $attributes as $attribute_name => $options ) {
             if ( ! taxonomy_exists( $attribute_name ) ) {
@@ -180,11 +180,13 @@ class WVCI_Frontend {
 
                 $has_swatches = true;
 
-                // Find the variation image for this attribute value
+                // Find the variation image and stock status for this attribute value
                 $var_image_url = '';
+                $in_stock      = true;
                 $attr_key      = sanitize_title( $attribute_name );
-                if ( isset( $variation_image_map[ $attr_key ][ $option ] ) ) {
-                    $var_image_url = $variation_image_map[ $attr_key ][ $option ];
+                if ( isset( $variation_data_map[ $attr_key ][ $option ] ) ) {
+                    $var_image_url = $variation_data_map[ $attr_key ][ $option ]['image'];
+                    $in_stock      = $variation_data_map[ $attr_key ][ $option ]['in_stock'];
                 }
 
                 $swatches[] = array(
@@ -194,6 +196,7 @@ class WVCI_Frontend {
                     'color'     => get_term_meta( $term->term_id, 'wvci_swatch_color', true ),
                     'image'     => get_term_meta( $term->term_id, 'wvci_swatch_image', true ),
                     'var_image' => $var_image_url,
+                    'in_stock'  => $in_stock,
                 );
             }
 
@@ -204,14 +207,15 @@ class WVCI_Frontend {
             echo '<div class="wvci-archive-swatches" data-product-id="' . esc_attr( $product->get_id() ) . '">';
 
             foreach ( $swatches as $sw ) {
-                $data_var_img = $sw['var_image'] ? ' data-variation-img="' . esc_url( $sw['var_image'] ) . '"' : '';
+                $data_var_img  = $sw['var_image'] ? ' data-variation-img="' . esc_url( $sw['var_image'] ) . '"' : '';
+                $stock_class   = $sw['in_stock'] ? '' : ' wvci-out-of-stock';
 
                 if ( 'color' === $sw['type'] && $sw['color'] ) {
-                    echo '<span class="wvci-swatch wvci-swatch--color wvci-archive-swatch" data-value="' . esc_attr( $sw['slug'] ) . '" title="' . esc_attr( $sw['name'] ) . '" style="background-color:' . esc_attr( $sw['color'] ) . ';"' . $data_var_img . '></span>';
+                    echo '<span class="wvci-swatch wvci-swatch--color wvci-archive-swatch' . $stock_class . '" data-value="' . esc_attr( $sw['slug'] ) . '" title="' . esc_attr( $sw['name'] ) . '" style="background-color:' . esc_attr( $sw['color'] ) . ';"' . $data_var_img . '></span>';
                 } elseif ( 'image' === $sw['type'] && $sw['image'] ) {
                     $img_url = wp_get_attachment_image_url( $sw['image'], 'thumbnail' );
                     if ( $img_url ) {
-                        echo '<span class="wvci-swatch wvci-swatch--image wvci-archive-swatch" data-value="' . esc_attr( $sw['slug'] ) . '" title="' . esc_attr( $sw['name'] ) . '"' . $data_var_img . '><img src="' . esc_url( $img_url ) . '" alt="' . esc_attr( $sw['name'] ) . '" /></span>';
+                        echo '<span class="wvci-swatch wvci-swatch--image wvci-archive-swatch' . $stock_class . '" data-value="' . esc_attr( $sw['slug'] ) . '" title="' . esc_attr( $sw['name'] ) . '"' . $data_var_img . '><img src="' . esc_url( $img_url ) . '" alt="' . esc_attr( $sw['name'] ) . '" /></span>';
                     }
                 }
             }
@@ -221,35 +225,44 @@ class WVCI_Frontend {
     }
 
     /**
-     * Build a map of attribute_value => variation thumbnail URL for a variable product.
+     * Build a map of attribute_value => { image, in_stock } for a variable product.
+     *
+     * A value is considered "in stock" if at least one variation carrying that
+     * attribute value is in stock.
      *
      * @param WC_Product_Variable $product
-     * @return array  [ 'pa_color' => [ 'red' => 'http://...jpg', 'blue' => '...' ] ]
+     * @return array  [ 'pa_color' => [ 'red' => [ 'image' => '…', 'in_stock' => true ] ] ]
      */
-    private function build_variation_image_map( $product ) {
+    private function build_variation_data_map( $product ) {
         $map        = array();
         $variations = $product->get_available_variations();
 
         foreach ( $variations as $variation ) {
-            $image_id = isset( $variation['image_id'] ) ? $variation['image_id'] : 0;
-            if ( ! $image_id ) {
-                continue;
-            }
-
-            $image_url = wp_get_attachment_image_url( $image_id, 'woocommerce_thumbnail' );
-            if ( ! $image_url ) {
-                continue;
-            }
+            $image_id  = isset( $variation['image_id'] ) ? $variation['image_id'] : 0;
+            $image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'woocommerce_thumbnail' ) : '';
+            $is_in_stock = isset( $variation['is_in_stock'] ) ? (bool) $variation['is_in_stock'] : true;
 
             $attrs = isset( $variation['attributes'] ) ? $variation['attributes'] : array();
             foreach ( $attrs as $attr_key => $attr_value ) {
                 if ( empty( $attr_value ) ) {
                     continue; // "any" value
                 }
-                // $attr_key is like "attribute_pa_color"
                 $clean_key = str_replace( 'attribute_', '', $attr_key );
+
                 if ( ! isset( $map[ $clean_key ][ $attr_value ] ) ) {
-                    $map[ $clean_key ][ $attr_value ] = $image_url;
+                    $map[ $clean_key ][ $attr_value ] = array(
+                        'image'    => $image_url ? $image_url : '',
+                        'in_stock' => $is_in_stock,
+                    );
+                } else {
+                    // If any variation with this value is in stock, mark as in stock
+                    if ( $is_in_stock ) {
+                        $map[ $clean_key ][ $attr_value ]['in_stock'] = true;
+                    }
+                    // Keep the first image found
+                    if ( ! $map[ $clean_key ][ $attr_value ]['image'] && $image_url ) {
+                        $map[ $clean_key ][ $attr_value ]['image'] = $image_url;
+                    }
                 }
             }
         }

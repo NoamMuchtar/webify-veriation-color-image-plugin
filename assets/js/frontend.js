@@ -178,6 +178,11 @@
             e.stopPropagation(); // prevent navigating to product page
 
             var $swatch = $(this);
+
+            // Out-of-stock swatches are not selectable
+            if ($swatch.hasClass('wvci-out-of-stock')) {
+                return;
+            }
             var $container = $swatch.closest('.wvci-archive-swatches');
             var variationImg = $swatch.data('variation-img');
 
