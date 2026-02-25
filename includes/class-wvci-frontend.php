@@ -22,7 +22,7 @@ class WVCI_Frontend {
      * Enqueue frontend CSS and JS on product and archive/shop pages.
      */
     public function enqueue_frontend_assets() {
-        if ( ! is_product() && ! is_shop() && ! is_product_category() && ! is_product_tag() && ! is_product_taxonomy() ) {
+        if ( ! is_product() && ! is_shop() && ! is_product_category() && ! is_product_tag() && ! is_product_taxonomy() && ! is_front_page() && ! is_home() ) {
             return;
         }
 
@@ -239,7 +239,8 @@ class WVCI_Frontend {
 
         foreach ( $variations as $variation ) {
             $image_id  = isset( $variation['image_id'] ) ? $variation['image_id'] : 0;
-            $image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'woocommerce_thumbnail' ) : '';
+            $archive_size = apply_filters( 'single_product_archive_thumbnail_size', 'woocommerce_thumbnail' );
+            $image_url    = $image_id ? wp_get_attachment_image_url( $image_id, $archive_size ) : '';
             $is_in_stock = isset( $variation['is_in_stock'] ) ? (bool) $variation['is_in_stock'] : true;
 
             $attrs = isset( $variation['attributes'] ) ? $variation['attributes'] : array();

@@ -160,7 +160,10 @@
 
 /* Smooth image transition on archive product cards */
 li.product img.attachment-woocommerce_thumbnail,
-li.product img.wp-post-image {
+li.product img.attachment-medium_large,
+li.product img.wp-post-image,
+.product img.wp-post-image,
+.woocommerce-loop-product__link img {
     transition: opacity 0.2s ease;
 }
 

@@ -245,6 +245,48 @@
     }
 
     /**
+     * Find the main product image inside a product card.
+     * Uses multiple fallback selectors for maximum theme compatibility.
+     */
+    function findProductImage($productCard) {
+        var $img = $productCard.find('img.wp-post-image').first();
+        if (!$img.length) {
+            $img = $productCard.find('img.attachment-woocommerce_thumbnail, img.attachment-medium_large, img.woocommerce-placeholder').first();
+        }
+        if (!$img.length) {
+            $img = $productCard.find('.woocommerce-loop-product__link img').first();
+        }
+        if (!$img.length) {
+            $img = $productCard.find('a > img').first();
+        }
+        return $img;
+    }
+
+    /**
+     * Smoothly swap an archive product image: fade out → swap src → fade in.
+     */
+    function fadeSwapImage($img, newSrc) {
+        if (!newSrc || $img.attr('src') === newSrc) {
+            return;
+        }
+
+        // Preload the new image first to avoid flicker
+        var preload = new Image();
+        preload.onload = function () {
+            // Fade out current image
+            $img.css('opacity', '0');
+
+            // After CSS transition completes, swap src and fade in
+            setTimeout(function () {
+                $img.attr('src', newSrc);
+                $img.removeAttr('srcset');
+                $img.css('opacity', '1');
+            }, 200);
+        };
+        preload.src = newSrc;
+    }
+
+    /**
      * Archive / shop page: handle swatch clicks to swap product thumbnail image.
      */
     function initArchiveSwatches() {
@@ -256,18 +298,18 @@
             var $container = $swatch.closest('.wvci-archive-swatches');
             var variationImg = $swatch.data('variation-img');
 
-            // Find the product card wrapper (li.product)
+            // Find the product card wrapper
             var $productCard = $container.closest('li.product, .product');
             if (!$productCard.length) {
                 return;
             }
 
-            // Store original image on first interaction
-            var $img = $productCard.find('.attachment-woocommerce_thumbnail, .woocommerce-placeholder, .wp-post-image').first();
+            var $img = findProductImage($productCard);
             if (!$img.length) {
                 return;
             }
 
+            // Store original image on first interaction
             if (!$img.data('wvci-original-src')) {
                 $img.data('wvci-original-src', $img.attr('src'));
                 $img.data('wvci-original-srcset', $img.attr('srcset') || '');
@@ -276,12 +318,7 @@
             // Toggle: if already selected, deselect and restore original image
             if ($swatch.hasClass('wvci-selected')) {
                 $swatch.removeClass('wvci-selected');
-                $img.attr('src', $img.data('wvci-original-src'));
-                if ($img.data('wvci-original-srcset')) {
-                    $img.attr('srcset', $img.data('wvci-original-srcset'));
-                } else {
-                    $img.removeAttr('srcset');
-                }
+                fadeSwapImage($img, $img.data('wvci-original-src'));
                 return;
             }
 
@@ -291,8 +328,7 @@
 
             // Swap the product image if variation has an image
             if (variationImg) {
-                $img.attr('src', variationImg);
-                $img.removeAttr('srcset'); // avoid conflicting srcset
+                fadeSwapImage($img, variationImg);
             }
         });
     }
