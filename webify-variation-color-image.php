@@ -3,7 +3,7 @@
  * Plugin Name: Webify Variation Color & Image
  * Plugin URI: https://webify.co.il
  * Description: Adds color and image swatches to WooCommerce product attribute terms, and displays them on the product page instead of default dropdowns. Selecting a variation swaps the product image.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Webify
  * Author URI: https://webify.co.il
  * Text Domain: webify-variation-color-image
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'WVCI_VERSION', '1.0.0' );
+define( 'WVCI_VERSION', '1.1.0' );
 define( 'WVCI_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WVCI_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 

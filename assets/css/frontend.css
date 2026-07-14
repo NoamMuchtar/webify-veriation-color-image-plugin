@@ -37,6 +37,7 @@
     position: relative;
 }
 
+.wvci-swatch.wvci-disabled::before,
 .wvci-swatch.wvci-disabled::after {
     content: '';
     position: absolute;
@@ -45,6 +46,13 @@
     right: -2px;
     height: 1px;
     background: #e00;
+}
+
+.wvci-swatch.wvci-disabled::before {
+    transform: rotate(45deg);
+}
+
+.wvci-swatch.wvci-disabled::after {
     transform: rotate(-45deg);
 }
 
@@ -54,6 +62,7 @@
     position: relative;
 }
 
+.wvci-swatch.wvci-out-of-stock::before,
 .wvci-swatch.wvci-out-of-stock::after {
     content: '';
     position: absolute;
@@ -62,6 +71,13 @@
     right: -2px;
     height: 1px;
     background: #e00;
+}
+
+.wvci-swatch.wvci-out-of-stock::before {
+    transform: rotate(45deg);
+}
+
+.wvci-swatch.wvci-out-of-stock::after {
     transform: rotate(-45deg);
 }
 

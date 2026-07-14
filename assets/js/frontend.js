@@ -222,6 +222,36 @@
     }
 
     /**
+     * Change add-to-cart button text when an out-of-stock variation is selected.
+     */
+    function initOutOfStockButton() {
+        var $form = $('form.variations_form');
+
+        if (!$form.length) {
+            return;
+        }
+
+        var $button = $form.find('.single_add_to_cart_button');
+        var originalButtonText = $button.text();
+
+        $form.on('found_variation', function (event, variation) {
+            if (!variation) {
+                return;
+            }
+
+            if (!variation.is_in_stock) {
+                $button.text('אזל המלאי').addClass('disabled wc-variation-is-unavailable').attr('disabled', 'disabled');
+            } else {
+                $button.text(originalButtonText).removeClass('disabled wc-variation-is-unavailable').removeAttr('disabled');
+            }
+        });
+
+        $form.on('reset_data', function () {
+            $button.text(originalButtonText).removeClass('disabled wc-variation-is-unavailable').removeAttr('disabled');
+        });
+    }
+
+    /**
      * Auto-select the first swatch in each attribute group on product page load.
      */
     function initAutoSelectFirst() {
@@ -338,6 +368,7 @@
         initVariationImageSwap();
         syncSwatchesWithSelects();
         initAvailabilityCheck();
+        initOutOfStockButton();
         initAutoSelectFirst();
         initArchiveSwatches();
     });
